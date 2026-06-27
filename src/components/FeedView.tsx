@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Sparkles, LayoutGrid } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { PostCard } from "@/components/PostCard";
 import { Card } from "@/components/Card";
@@ -9,14 +10,30 @@ import { cn } from "@/lib/utils";
 
 type FeedPost = Parameters<typeof PostCard>[0]["post"];
 type MoodFilter = { label: string; count: number };
+type FeedView = "forYou" | "all";
 
 export function FeedView() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [moods, setMoods] = useState<MoodFilter[]>([]);
+  const [interests, setInterests] = useState<string[]>([]);
   const [activeMood, setActiveMood] = useState<string | null>(null);
+  const [feedView, setFeedView] = useState<FeedView>("forYou");
   const [user, setUser] = useState<{ displayName: string; moodCoins: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  async function loadFeed(view: FeedView, mood: string | null) {
+    setLoading(true);
+    const params = new URLSearchParams();
+    params.set("view", view);
+    if (mood) params.set("mood", mood);
+    const res = await fetch(`/api/feed?${params}`);
+    const data = await res.json();
+    setPosts(data.posts);
+    setMoods(data.moods);
+    setInterests(data.interests ?? []);
+    setLoading(false);
+  }
 
   useEffect(() => {
     async function init() {
@@ -26,25 +43,20 @@ export function FeedView() {
         return;
       }
       setUser({ displayName: me.user.displayName, moodCoins: me.user.moodCoins });
-
-      const res = await fetch("/api/feed");
-      const data = await res.json();
-      setPosts(data.posts);
-      setMoods(data.moods);
-      setLoading(false);
+      await loadFeed("forYou", null);
     }
     init();
   }, [router]);
 
+  async function switchView(view: FeedView) {
+    setFeedView(view);
+    setActiveMood(null);
+    await loadFeed(view, null);
+  }
+
   async function filterByMood(mood: string | null) {
     setActiveMood(mood);
-    setLoading(true);
-    const url = mood ? `/api/feed?mood=${encodeURIComponent(mood)}` : "/api/feed";
-    const res = await fetch(url);
-    const data = await res.json();
-    setPosts(data.posts);
-    setMoods(data.moods);
-    setLoading(false);
+    await loadFeed(feedView, mood);
   }
 
   if (!user) {
@@ -63,9 +75,51 @@ export function FeedView() {
         <div>
           <h1 className="text-2xl font-semibold text-white">MoodCast Feed</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Emotional thoughts that resonated — demo posts are marked with a Demo badge
+            {feedView === "forYou"
+              ? "Personalized for your moods and interests"
+              : "All posts from the community"}
           </p>
         </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => switchView("forYou")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition",
+              feedView === "forYou"
+                ? "bg-violet-600 text-white"
+                : "border border-white/10 text-slate-400 hover:text-white"
+            )}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            For You
+          </button>
+          <button
+            onClick={() => switchView("all")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition",
+              feedView === "all"
+                ? "bg-violet-600 text-white"
+                : "border border-white/10 text-slate-400 hover:text-white"
+            )}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            All Posts
+          </button>
+        </div>
+
+        {feedView === "forYou" && interests.length > 0 && !activeMood && (
+          <Card>
+            <p className="text-xs text-slate-400">
+              Based on your check-ins & activity:{" "}
+              {interests.map((i) => (
+                <span key={i} className="mr-1.5 rounded-full bg-violet-500/20 px-2 py-0.5 text-violet-300">
+                  {i}
+                </span>
+              ))}
+            </p>
+          </Card>
+        )}
 
         {moods.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -74,11 +128,11 @@ export function FeedView() {
               className={cn(
                 "rounded-full px-3 py-1.5 text-xs transition",
                 !activeMood
-                  ? "bg-violet-600 text-white"
+                  ? "bg-violet-600/80 text-white"
                   : "border border-white/10 text-slate-400 hover:text-white"
               )}
             >
-              All
+              {feedView === "forYou" ? "All interests" : "All moods"}
             </button>
             {moods.map((m) => (
               <button
@@ -99,7 +153,7 @@ export function FeedView() {
 
         <Card>
           <p className="text-sm text-slate-300">
-            Publish from your room: check <strong className="text-white">&quot;Also publish to MoodCast Feed&quot;</strong> when posting, or tap <strong className="text-white">Publish to Feed</strong> on any of your posts.
+            React with emojis, leave comments, and publish from your room to share on the feed.
           </p>
         </Card>
 
@@ -108,7 +162,9 @@ export function FeedView() {
         ) : posts.length === 0 ? (
           <Card>
             <p className="text-center text-slate-400">
-              No feed posts yet. Be the first to publish from a mood room!
+              {feedView === "forYou"
+                ? "No matching posts yet. Try All Posts or check in with how you feel!"
+                : "No feed posts yet. Be the first to publish from a mood room!"}
             </p>
           </Card>
         ) : (

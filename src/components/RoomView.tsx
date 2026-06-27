@@ -106,7 +106,7 @@ export function RoomView({ initialRoom }: { initialRoom: RoomData }) {
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="What's on your mind? No comments — reactions only."
+            placeholder="What's on your mind? Share a thought — others can react and comment."
             rows={3}
             className="w-full resize-none rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white placeholder:text-slate-500 focus:border-violet-500 focus:outline-none"
             required

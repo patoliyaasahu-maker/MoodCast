@@ -3,7 +3,7 @@
  * Apply DB schema via Neon WebSocket (no TCP port 5432).
  * Used locally (db:setup) and on Vercel build.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { config } from "dotenv";
 import { Pool, neonConfig } from "@neondatabase/serverless";
@@ -35,22 +35,26 @@ export async function applyNeonSchema(connectionString) {
   try {
     await client.query("SELECT 1");
 
-    const migrationPath = resolve(
-      process.cwd(),
-      "prisma/migrations/20250627000000_init/migration.sql"
-    );
-    const statements = parseStatements(readFileSync(migrationPath, "utf8"));
+    const migrationsDir = resolve(process.cwd(), "prisma/migrations");
+    const migrationDirs = readdirSync(migrationsDir)
+      .filter((d) => d !== "migration_lock.toml")
+      .sort();
 
-    for (const statement of statements) {
-      const preview = statement.slice(0, 60).replace(/\s+/g, " ");
-      try {
-        await client.query(statement);
-        console.log(`  ✓ ${preview}...`);
-      } catch (err) {
-        if (err && typeof err === "object" && "code" in err && SKIP_CODES.has(err.code)) {
-          console.log(`  · skipped: ${preview}...`);
-        } else {
-          throw err;
+    for (const dir of migrationDirs) {
+      const migrationPath = resolve(migrationsDir, dir, "migration.sql");
+      const statements = parseStatements(readFileSync(migrationPath, "utf8"));
+
+      for (const statement of statements) {
+        const preview = statement.slice(0, 60).replace(/\s+/g, " ");
+        try {
+          await client.query(statement);
+          console.log(`  ✓ ${preview}...`);
+        } catch (err) {
+          if (err && typeof err === "object" && "code" in err && SKIP_CODES.has(err.code)) {
+            console.log(`  · skipped: ${preview}...`);
+          } else {
+            throw err;
+          }
         }
       }
     }

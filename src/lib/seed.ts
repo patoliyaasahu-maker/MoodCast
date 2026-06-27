@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { isDemoUser } from "./demo";
-import { DEMO_FEED_POSTS, DEMO_ROOMS, DEMO_USERS } from "./demo-content";
+import { DEMO_FEED_POSTS, DEMO_ROOMS, DEMO_USERS, DEMO_FEED_COMMENTS } from "./demo-content";
 
 function hoursAgoDate(hours = 0) {
   return new Date(Date.now() - hours * 60 * 60 * 1000);
@@ -31,6 +31,7 @@ export async function seedDatabase() {
   let roomPostsCreated = 0;
   let checkInsCreated = 0;
   let membersAdded = 0;
+  let feedCommentsCreated = 0;
 
   for (const post of DEMO_FEED_POSTS) {
     const author = userByEmail[post.email];
@@ -125,6 +126,32 @@ export async function seedDatabase() {
     }
   }
 
+  for (const item of DEMO_FEED_COMMENTS) {
+    const author = userByEmail[item.authorEmail];
+    const feedPost = await prisma.feedPost.findFirst({
+      where: {
+        authorId: userByEmail[item.postEmail].id,
+        content: { contains: item.postMatch },
+      },
+    });
+    if (!feedPost) continue;
+
+    const existing = await prisma.feedComment.findFirst({
+      where: { feedPostId: feedPost.id, authorId: author.id, content: item.content },
+    });
+    if (!existing) {
+      await prisma.feedComment.create({
+        data: {
+          feedPostId: feedPost.id,
+          authorId: author.id,
+          content: item.content,
+          createdAt: hoursAgoDate(1),
+        },
+      });
+      feedCommentsCreated++;
+    }
+  }
+
   return {
     users: users.length,
     demoUsers: users.filter((u) => isDemoUser(u.email)).length,
@@ -135,6 +162,7 @@ export async function seedDatabase() {
     roomPostsCreated,
     membersAdded,
     checkInsCreated,
+    feedCommentsCreated,
     demoLogin: { email: "demo@moodcast.app", password: "demo1234" },
   };
 }

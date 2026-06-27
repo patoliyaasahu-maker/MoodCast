@@ -71,7 +71,7 @@ export function CheckInForm({
           placeholder={
             isChange
               ? "e.g. I was stressed earlier but now I feel calmer and hopeful..."
-              : "e.g. Anxious about tomorrow. Like something big might go wrong."
+              : "e.g. Anxious about tomorrow… or share a funny school memory from the old days"
           }
           rows={4}
           className="w-full resize-none rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white placeholder:text-slate-500 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"

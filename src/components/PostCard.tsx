@@ -1,9 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Globe, Check } from "lucide-react";
+import { Globe, Check, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
+import { REACTION_DEFS } from "@/lib/reactions";
 import { UserAlias } from "./UserAlias";
+
+export type Comment = {
+  id: string;
+  content: string;
+  authorAlias: string;
+  isOwn: boolean;
+  isDemo?: boolean;
+  createdAt: string;
+};
 
 type Post = {
   id: string;
@@ -15,6 +25,11 @@ type Post = {
   helpfulCount: number;
   saveCount: number;
   shareCount: number;
+  laughCount?: number;
+  supportCount?: number;
+  relateCount?: number;
+  wowCount?: number;
+  commentCount?: number;
   createdAt: string;
   myReactions: string[];
   publishedToFeed?: boolean;
@@ -22,23 +37,25 @@ type Post = {
   moodLabel?: string;
 };
 
-const REACTIONS = [
-  { type: "LIKE", emoji: "❤️", label: "Like", field: "likeCount" as const },
-  { type: "HELPFUL", emoji: "👍", label: "Helpful", field: "helpfulCount" as const },
-  { type: "SAVE", emoji: "🔖", label: "Save", field: "saveCount" as const },
-  { type: "SHARE", emoji: "📤", label: "Share", field: "shareCount" as const },
-];
-
 type PostCardProps = {
   post: Post;
   variant?: "room" | "feed";
   onPublished?: (postId: string) => void;
 };
 
+function reactionCount(post: Post, field: (typeof REACTION_DEFS)[number]["field"]) {
+  return post[field] ?? 0;
+}
+
 export function PostCard({ post: initialPost, variant = "room", onPublished }: PostCardProps) {
   const [post, setPost] = useState(initialPost);
   const [loading, setLoading] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
 
   async function react(type: string) {
     if (post.isOwn || post.myReactions.includes(type)) return;
@@ -62,10 +79,7 @@ export function PostCard({ post: initialPost, variant = "room", onPublished }: P
     if (res.ok) {
       setPost((p) => ({
         ...p,
-        likeCount: data.post.likeCount,
-        helpfulCount: data.post.helpfulCount,
-        saveCount: data.post.saveCount,
-        shareCount: data.post.shareCount,
+        ...data.post,
         myReactions: [...p.myReactions, type],
       }));
     }
@@ -88,6 +102,54 @@ export function PostCard({ post: initialPost, variant = "room", onPublished }: P
       onPublished?.(post.id);
     }
   }
+
+  async function loadComments() {
+    const param = variant === "feed" ? `feedPostId=${post.id}` : `postId=${post.id}`;
+    const endpoint = variant === "feed" ? "/api/feed/comments" : "/api/comments";
+    const res = await fetch(`${endpoint}?${param}`);
+    if (res.ok) {
+      const data = await res.json();
+      setComments(data.comments);
+      setCommentsLoaded(true);
+    }
+  }
+
+  async function toggleComments() {
+    if (!showComments && !commentsLoaded) {
+      await loadComments();
+    }
+    setShowComments((v) => !v);
+  }
+
+  async function submitComment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!commentText.trim() || commentLoading) return;
+    setCommentLoading(true);
+
+    const endpoint = variant === "feed" ? "/api/feed/comments" : "/api/comments";
+    const body =
+      variant === "feed"
+        ? { feedPostId: post.id, content: commentText.trim() }
+        : { postId: post.id, content: commentText.trim() };
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    setCommentLoading(false);
+
+    if (res.ok) {
+      setComments((c) => [...c, data.comment]);
+      setPost((p) => ({ ...p, commentCount: (p.commentCount ?? 0) + 1 }));
+      setCommentText("");
+      setShowComments(true);
+    }
+  }
+
+  const totalComments = post.commentCount ?? comments.length;
 
   return (
     <article className="rounded-xl border border-white/10 bg-black/20 p-4">
@@ -132,16 +194,16 @@ export function PostCard({ post: initialPost, variant = "room", onPublished }: P
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {REACTIONS.map((r) => {
-          const count = post[r.field];
+      <div className="flex flex-wrap gap-1.5">
+        {REACTION_DEFS.map((r) => {
+          const count = reactionCount(post, r.field);
           const active = post.myReactions.includes(r.type);
           return (
             <button
               key={r.type}
               onClick={() => react(r.type)}
               disabled={post.isOwn || active || loading === r.type}
-              className={`flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs transition ${
+              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition ${
                 active
                   ? "border-violet-500 bg-violet-500/20 text-violet-200"
                   : "border-white/10 text-slate-400 hover:border-white/20 hover:text-white disabled:opacity-40"
@@ -153,6 +215,54 @@ export function PostCard({ post: initialPost, variant = "room", onPublished }: P
             </button>
           );
         })}
+      </div>
+
+      <div className="mt-3 border-t border-white/5 pt-3">
+        <button
+          type="button"
+          onClick={toggleComments}
+          className="flex items-center gap-2 text-xs text-slate-400 hover:text-violet-300"
+        >
+          <MessageCircle className="h-3.5 w-3.5" />
+          {totalComments > 0 ? `${totalComments} comment${totalComments === 1 ? "" : "s"}` : "Add a comment"}
+          {showComments ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+
+        {showComments && (
+          <div className="mt-3 space-y-3">
+            {comments.length === 0 && commentsLoaded && (
+              <p className="text-xs text-slate-500">No comments yet. Start the conversation.</p>
+            )}
+            {comments.map((c) => (
+              <div key={c.id} className="rounded-lg bg-white/5 px-3 py-2">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <UserAlias alias={c.authorAlias} isDemo={c.isDemo} isYou={c.isOwn} size="sm" />
+                  <span className="text-[10px] text-slate-500">
+                    {formatRelativeTime(c.createdAt)}
+                  </span>
+                </div>
+                <p className="text-xs leading-relaxed text-slate-300">{c.content}</p>
+              </div>
+            ))}
+            <form onSubmit={submitComment} className="flex gap-2">
+              <input
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Write a comment..."
+                maxLength={500}
+                className="flex-1 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-violet-500 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={commentLoading || !commentText.trim()}
+                className="rounded-lg bg-violet-600 px-3 py-2 text-xs font-medium text-white disabled:opacity-50"
+              >
+                {commentLoading ? "..." : "Post"}
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </article>
   );

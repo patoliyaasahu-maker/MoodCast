@@ -23,6 +23,9 @@ async function main() {
   console.log(`Feed: ${result.feedPostsCreated} new posts (${result.feedPostsTotal} total in catalog)`);
   console.log(`Rooms: ${result.roomsCreated} new rooms (${result.roomsTotal} total in catalog)`);
   console.log(`Room posts: ${result.roomPostsCreated} new · Members added: ${result.membersAdded}`);
+  if (result.feedCommentsCreated) {
+    console.log(`Feed comments: ${result.feedCommentsCreated} new`);
+  }
   console.log("Login as: demo@moodcast.app / demo1234");
 }
 

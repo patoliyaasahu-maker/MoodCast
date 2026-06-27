@@ -14,6 +14,10 @@ enum ReactionType {
   HELPFUL
   SAVE
   SHARE
+  LAUGH
+  SUPPORT
+  RELATE
+  WOW
 }
 
 enum CoinReason {
@@ -21,6 +25,10 @@ enum CoinReason {
   HELPFUL_RECEIVED
   SAVE_RECEIVED
   SHARE_RECEIVED
+  LAUGH_RECEIVED
+  SUPPORT_RECEIVED
+  RELATE_RECEIVED
+  WOW_RECEIVED
   REDEEM_PREMIUM
   REDEEM_GIFT
   ADMIN_ADJUST
@@ -43,6 +51,8 @@ model User {
   reactions      Reaction[]
   feedPosts      FeedPost[]
   feedReactions  FeedReaction[]
+  postComments   PostComment[]
+  feedComments   FeedComment[]
   coinLedger     CoinTransaction[]
 }
 
@@ -96,8 +106,13 @@ model Post {
   helpfulCount Int        @default(0)
   saveCount    Int        @default(0)
   shareCount   Int        @default(0)
+  laughCount   Int        @default(0)
+  supportCount Int        @default(0)
+  relateCount  Int        @default(0)
+  wowCount     Int        @default(0)
   createdAt    DateTime   @default(now())
   reactions    Reaction[]
+  comments     PostComment[]
   feedPost     FeedPost?
 
   @@index([roomId, createdAt])
@@ -115,8 +130,13 @@ model FeedPost {
   helpfulCount Int            @default(0)
   saveCount    Int            @default(0)
   shareCount   Int            @default(0)
+  laughCount   Int            @default(0)
+  supportCount Int            @default(0)
+  relateCount  Int            @default(0)
+  wowCount     Int            @default(0)
   createdAt    DateTime       @default(now())
   reactions    FeedReaction[]
+  comments     FeedComment[]
 
   @@index([createdAt])
   @@index([moodLabel])
@@ -158,4 +178,28 @@ model CoinTransaction {
   createdAt DateTime   @default(now())
 
   @@index([userId, createdAt])
+}
+
+model PostComment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt])
+}
+
+model FeedComment {
+  id         String   @id @default(cuid())
+  feedPostId String
+  feedPost   FeedPost @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content    String
+  createdAt  DateTime @default(now())
+
+  @@index([feedPostId, createdAt])
 }

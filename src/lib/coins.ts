@@ -6,6 +6,10 @@ export const COIN_VALUES: Record<ReactionType, number> = {
   HELPFUL: 5,
   SAVE: 3,
   SHARE: 5,
+  LAUGH: 1,
+  SUPPORT: 2,
+  RELATE: 2,
+  WOW: 1,
 };
 
 const REASON_MAP: Record<ReactionType, CoinReason> = {
@@ -13,6 +17,10 @@ const REASON_MAP: Record<ReactionType, CoinReason> = {
   HELPFUL: "HELPFUL_RECEIVED",
   SAVE: "SAVE_RECEIVED",
   SHARE: "SHARE_RECEIVED",
+  LAUGH: "LAUGH_RECEIVED",
+  SUPPORT: "SUPPORT_RECEIVED",
+  RELATE: "RELATE_RECEIVED",
+  WOW: "WOW_RECEIVED",
 };
 
 export async function awardCoinsForReaction(

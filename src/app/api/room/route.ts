@@ -3,6 +3,7 @@ import { requireUser, getAnonymousName } from "@/lib/auth";
 import { expireStaleRooms } from "@/lib/rooms";
 import { prisma } from "@/lib/prisma";
 import { isDemoUser } from "@/lib/demo";
+import { pickReactionCounts } from "@/lib/reactions";
 
 export async function GET(request: Request) {
   const user = await requireUser();
@@ -39,6 +40,7 @@ export async function GET(request: Request) {
           author: { select: { id: true, email: true, displayName: true, anonymousAlias: true } },
           reactions: { where: { userId: user.id } },
           feedPost: { select: { id: true } },
+          _count: { select: { comments: true } },
         },
       },
       _count: { select: { members: true } },
@@ -69,10 +71,8 @@ export async function GET(request: Request) {
         authorAlias: getAnonymousName(p.author),
         isOwn: p.author.id === user.id,
         isDemo: isDemoUser(p.author.email),
-        likeCount: p.likeCount,
-        helpfulCount: p.helpfulCount,
-        saveCount: p.saveCount,
-        shareCount: p.shareCount,
+        commentCount: p._count.comments,
+        ...pickReactionCounts(p),
         createdAt: p.createdAt,
         myReactions: p.reactions.map((r) => r.type),
         publishedToFeed: !!p.feedPost,

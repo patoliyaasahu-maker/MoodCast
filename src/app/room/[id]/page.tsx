@@ -4,6 +4,7 @@ import { RoomView } from "@/components/RoomView";
 import { requireUser, getAnonymousName } from "@/lib/auth";
 import { expireStaleRooms } from "@/lib/rooms";
 import { isDemoUser } from "@/lib/demo";
+import { pickReactionCounts } from "@/lib/reactions";
 import { prisma } from "@/lib/prisma";
 
 type Props = { params: Promise<{ id: string }> };
@@ -33,6 +34,7 @@ export default async function RoomPage({ params }: Props) {
           author: { select: { id: true, email: true, displayName: true, anonymousAlias: true } },
           reactions: { where: { userId: user.id } },
           feedPost: { select: { id: true } },
+          _count: { select: { comments: true } },
         },
       },
       _count: { select: { members: true } },
@@ -73,10 +75,8 @@ export default async function RoomPage({ params }: Props) {
       authorAlias: getAnonymousName(p.author),
       isOwn: p.author.id === user.id,
       isDemo: isDemoUser(p.author.email),
-      likeCount: p.likeCount,
-      helpfulCount: p.helpfulCount,
-      saveCount: p.saveCount,
-      shareCount: p.shareCount,
+      commentCount: p._count.comments,
+      ...pickReactionCounts(p),
       createdAt: p.createdAt.toISOString(),
       myReactions: p.reactions.map((r) => r.type),
       publishedToFeed: !!p.feedPost,

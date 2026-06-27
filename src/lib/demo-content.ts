@@ -442,6 +442,129 @@ export const DEMO_FEED_POSTS: DemoFeedPost[] = [
     shares: 2,
     hoursAgo: 2,
   },
+  // Stories — funny school-day memories
+  {
+    email: "rohan@demo.com",
+    moodLabel: "Stories",
+    content:
+      "Class 8. Forgot my homework. Drew a fresh notebook cover at 11 PM with sketch pens. Next morning the ink smudged in the rain and my name looked like a crime scene. Teacher said 'nice art project' and gave me a zero. Legend status unlocked.",
+    likes: 48,
+    helpful: 6,
+    saves: 3,
+    shares: 14,
+    hoursAgo: 3,
+  },
+  {
+    email: "ananya@demo.com",
+    moodLabel: "Stories",
+    content:
+      "We had a 'silent reading period' every Friday. I once hid a comic inside my textbook. Teacher walked past, paused, and said 'interesting plot twist in history today.' I nearly swallowed my tongue. She let me go. Still think about her kindness.",
+    likes: 35,
+    helpful: 8,
+    saves: 5,
+    shares: 9,
+    hoursAgo: 6,
+  },
+  {
+    email: "arjun@demo.com",
+    moodLabel: "Stories",
+    content:
+      "School bus story: I was so deep in a daydream I missed my stop by four kilometres. Driver turned the whole bus around like a VIP escort while everyone clapped sarcastically. My mom still brings it up at weddings.",
+    likes: 41,
+    helpful: 4,
+    saves: 2,
+    shares: 11,
+    hoursAgo: 10,
+  },
+  {
+    email: "rahul@demo.com",
+    moodLabel: "Stories",
+    content:
+      "PT sir's whistle could stop traffic, friendships, and existential crises. Once blew it during an exam because someone sneezed too loud. Entire hall froze. The sneezer whispered 'sorry sir' like he'd committed treason.",
+    likes: 52,
+    helpful: 3,
+    saves: 1,
+    shares: 16,
+    hoursAgo: 8,
+  },
+  {
+    email: "kabir@demo.com",
+    moodLabel: "Stories",
+    content:
+      "Annual day rehearsal, 2007. I was a tree. Not a speaking tree. A background tree. Fell off the stage during the finale because someone 'watered' the prop roots too realistically. The audience thought it was choreography. It was not.",
+    likes: 58,
+    helpful: 5,
+    saves: 4,
+    shares: 19,
+    hoursAgo: 12,
+  },
+  {
+    email: "dev@demo.com",
+    moodLabel: "Stories",
+    content:
+      "College lab: submitted code that worked on my laptop and nowhere else. Professor ran it, got an error, and said 'ah yes, the classic local-only feature.' Whole class laughed. I laughed too. Through pain.",
+    likes: 33,
+    helpful: 7,
+    saves: 6,
+    shares: 8,
+    hoursAgo: 15,
+  },
+  {
+    email: "priya@demo.com",
+    moodLabel: "Stories",
+    content:
+      "Used to trade tiffin like a stock market. My aloo paratha for her pasta once. She opened the box, looked confused, and said 'this is not Italian.' I said 'it's Indo-Italian fusion.' We still argue about it ten years later.",
+    likes: 29,
+    helpful: 5,
+    saves: 3,
+    shares: 6,
+    hoursAgo: 18,
+  },
+  {
+    email: "meera@demo.com",
+    moodLabel: "Stories",
+    content:
+      "Assembly line confession: I lip-synced the school prayer for two years because I never learned the words. Friend bet me ₹10 I couldn't sing it solo. I tried. Music teacher discovered a new genre — accidental beatboxing.",
+    likes: 44,
+    helpful: 4,
+    saves: 2,
+    shares: 12,
+    hoursAgo: 20,
+  },
+  // Work — office politics, managers, releases
+  {
+    email: "rahul@demo.com",
+    moodLabel: "Work",
+    content:
+      "My manager assigns 'quick tasks' at 5:47 PM every Friday. They are never quick. Last week one became a weekend release. I love my job. I say this with zero conviction.",
+    likes: 36,
+    helpful: 14,
+    saves: 5,
+    shares: 8,
+    hoursAgo: 4,
+  },
+  {
+    email: "ishita@demo.com",
+    moodLabel: "Work",
+    content:
+      "Office politics 101: speak in meetings, get the work. Stay quiet, still get the work. I'm starting to think the real sprint is emotional survival.",
+    likes: 28,
+    helpful: 11,
+    saves: 4,
+    shares: 5,
+    hoursAgo: 7,
+  },
+  {
+    email: "dev@demo.com",
+    moodLabel: "Work",
+    content:
+      "Daily releases for three weeks straight. Today's deploy broke yesterday's fix for tomorrow's bug. Send help. Or coffee. Mostly coffee.",
+    likes: 31,
+    helpful: 9,
+    saves: 3,
+    shares: 6,
+    hoursAgo: 2,
+  },
 ];
 
 export const DEMO_ROOMS: DemoRoom[] = [
@@ -743,6 +866,111 @@ export const DEMO_ROOMS: DemoRoom[] = [
       },
     ],
   },
+  {
+    name: "Old School Stories Corner",
+    moodLabel: "Stories",
+    memberEmails: ["rohan@demo.com", "ananya@demo.com", "arjun@demo.com", "rahul@demo.com", "kabir@demo.com"],
+    posts: [
+      {
+        email: "rohan@demo.com",
+        content:
+          "Drop your funniest school memory below. I'll start: I once answered roll call for my friend who was hiding in the bathroom. Teacher called my name right after. Physics was never the same.",
+        likes: 10,
+        helpful: 3,
+        hoursAgo: 1,
+      },
+      {
+        email: "ananya@demo.com",
+        content:
+          "Long story short — we had a 'bring your pet to school' day that lasted exactly 11 minutes before a parrot escaped and landed on the principal's head. No pets policy exists to this day.",
+        likes: 16,
+        helpful: 2,
+        saves: 1,
+        hoursAgo: 3,
+      },
+      {
+        email: "arjun@demo.com",
+        content:
+          "Board exam hall. Sat in the wrong seat. Invigilator whispered 'beta, your future is in column 7.' Whole row tried not to laugh. I moved like I was in a spy film.",
+        likes: 12,
+        helpful: 4,
+        hoursAgo: 5,
+      },
+      {
+        email: "rahul@demo.com",
+        content:
+          "Recess cricket: hit the ball into the chemistry lab window. Not the glass — the open window. Ball landed in a beaker. Science sir held it up and said 'new element: panic.'",
+        likes: 14,
+        helpful: 1,
+        shares: 2,
+        hoursAgo: 7,
+      },
+      {
+        email: "kabir@demo.com",
+        content:
+          "School picnic. Packed extra socks. Forgot lunch. Ate three friends' leftovers and called it 'community dining.' Mom still proud somehow.",
+        likes: 8,
+        helpful: 2,
+        hoursAgo: 9,
+      },
+    ],
+  },
+  {
+    name: "Office Politics & Manager Vent",
+    moodLabel: "Work",
+    memberEmails: ["rahul@demo.com", "ishita@demo.com", "dev@demo.com", "dia@demo.com", "priya@demo.com", "kiran@demo.com"],
+    posts: [
+      {
+        email: "rahul@demo.com",
+        content:
+          "My manager says 'we're a family' every time they dump last-minute work on us. Families don't schedule releases on Friday night. Just saying.",
+        likes: 14,
+        helpful: 8,
+        hoursAgo: 1,
+      },
+      {
+        email: "ishita@demo.com",
+        content:
+          "Too much work isn't even the worst part. It's the politics — who gets credit, who gets blamed, who smiles in meetings while drowning in tickets. Anyone else's manager take credit for their deck?",
+        likes: 18,
+        helpful: 12,
+        saves: 4,
+        hoursAgo: 2,
+      },
+      {
+        email: "dev@demo.com",
+        content:
+          "We have daily releases now. DAILY. QA is tired. Dev is tired. Prod is tired. Manager said 'it's agile.' I said nothing. HR might be watching.",
+        likes: 22,
+        helpful: 6,
+        hoursAgo: 3,
+      },
+      {
+        email: "dia@demo.com",
+        content:
+          "Manager pinged me on Teams at 11 PM: 'quick sync?' It was not quick. It was a 40-minute lecture about 'ownership' while I owned three other fires.",
+        likes: 11,
+        helpful: 9,
+        hoursAgo: 5,
+      },
+      {
+        email: "priya@demo.com",
+        content:
+          "Question for the room: how do you push back on unrealistic deadlines without being labelled 'not a team player'? Asking because my calendar is a war crime.",
+        likes: 9,
+        helpful: 15,
+        hoursAgo: 6,
+      },
+      {
+        email: "kiran@demo.com",
+        content:
+          "New joiner got praised in all-hands for an idea I pitched in a 1:1 two months ago. Office politics isn't subtle here. It's loud and has a slide deck.",
+        likes: 16,
+        helpful: 7,
+        hoursAgo: 8,
+      },
+    ],
+  },
   // Core platform mood rooms
   {
     name: "Quiet Stressed Room",
@@ -817,4 +1045,43 @@ export const DEMO_LOGIN_ACCOUNTS = [
   { email: "sneha@demo.com", alias: "CalmRiver" },
   { email: "rohan@demo.com", alias: "LaughTrack" },
   { email: "nisha@demo.com", alias: "CloudNine" },
+];
+
+export const DEMO_FEED_COMMENTS = [
+  {
+    postEmail: "rahul@demo.com",
+    postMatch: "quick tasks",
+    authorEmail: "ishita@demo.com",
+    content: "The Friday 5:47 PM special 😭 you're not alone.",
+  },
+  {
+    postEmail: "dev@demo.com",
+    postMatch: "Daily releases",
+    authorEmail: "vikram@demo.com",
+    content: "We call it continuous deployment. I call it continuous suffering.",
+  },
+  {
+    postEmail: "rohan@demo.com",
+    postMatch: "imposter syndrome",
+    authorEmail: "meera@demo.com",
+    content: "The silence is the funniest part. Therapist wins that round.",
+  },
+  {
+    postEmail: "nisha@demo.com",
+    postMatch: "You don't need to have a breakdown",
+    authorEmail: "tara@demo.com",
+    content: "Saving this. Needed to hear it today.",
+  },
+  {
+    postEmail: "rahul@demo.com",
+    postMatch: "we're a family",
+    authorEmail: "priya@demo.com",
+    content: "Families also don't Slack you at midnight. Just saying.",
+  },
+  {
+    postEmail: "ananya@demo.com",
+    postMatch: "parrot escaped",
+    authorEmail: "rohan@demo.com",
+    content: "This is the best school story I've read all week 😂",
+  },
 ];

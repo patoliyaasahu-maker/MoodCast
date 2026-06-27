@@ -4,21 +4,12 @@ import { ReactionType } from "@prisma/client";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { awardCoinsForReaction } from "@/lib/coins";
+import { COUNT_FIELD, pickReactionCounts } from "@/lib/reactions";
 
 const schema = z.object({
   postId: z.string(),
-  type: z.enum(["LIKE", "HELPFUL", "SAVE", "SHARE"]),
+  type: z.nativeEnum(ReactionType),
 });
-
-const COUNT_FIELD: Record<ReactionType, keyof Pick<
-  import("@prisma/client").Post,
-  "likeCount" | "helpfulCount" | "saveCount" | "shareCount"
->> = {
-  LIKE: "likeCount",
-  HELPFUL: "helpfulCount",
-  SAVE: "saveCount",
-  SHARE: "shareCount",
-};
 
 export async function POST(request: Request) {
   const user = await requireUser();
@@ -73,13 +64,7 @@ export async function POST(request: Request) {
     const updated = await prisma.post.findUnique({ where: { id: postId } });
 
     return NextResponse.json({
-      post: {
-        id: updated!.id,
-        likeCount: updated!.likeCount,
-        helpfulCount: updated!.helpfulCount,
-        saveCount: updated!.saveCount,
-        shareCount: updated!.shareCount,
-      },
+      post: { id: updated!.id, ...pickReactionCounts(updated!) },
     });
   } catch (err) {
     if (err instanceof z.ZodError) {
