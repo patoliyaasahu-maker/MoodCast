@@ -2,133 +2,191 @@
 
 **Share how you feel. Not how you look.**
 
-Working demo MVP for tomorrow's showcase. Runs locally with SQLite (no Docker required).
+Emotional social network demo — deploys on **Vercel** with **PostgreSQL** (Neon recommended).
 
-## Quick start
+---
+
+## Deploy to Vercel (production)
+
+### Why SQLite failed on Vercel
+
+Vercel uses **serverless functions** with a **read-only filesystem**. SQLite (`file:./dev.db`) cannot persist data and will crash or lose all users on every request.
+
+**Fix:** PostgreSQL hosted on [Neon](https://neon.tech) (free tier, works natively with Vercel).
+
+### Step 1 — Create a Neon database
+
+1. Go to [neon.tech](https://neon.tech) → create a project
+2. Copy both connection strings from the dashboard:
+   - **Pooled connection** → `DATABASE_URL` (hostname contains `-pooler`)
+   - **Direct connection** → `DIRECT_URL`
+
+Example:
+```
+DATABASE_URL=postgresql://user:pass@ep-xxx-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require
+DIRECT_URL=postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+```
+
+### Step 2 — Push to GitHub & import on Vercel
+
+1. Push this repo to GitHub
+2. [vercel.com/new](https://vercel.com/new) → Import repository
+3. Framework preset: **Next.js** (auto-detected)
+4. Do **not** override the build command — uses `vercel-build` script automatically
+
+### Step 3 — Set environment variables on Vercel
+
+In **Project → Settings → Environment Variables**, add:
+
+| Variable | Value | Required |
+|----------|-------|----------|
+| `DATABASE_URL` | Neon **pooled** connection string | ✅ |
+| `DIRECT_URL` | Neon **direct** connection string | ✅ |
+| `JWT_SECRET` | Long random string (e.g. `openssl rand -base64 32`) | ✅ |
+| `ADMIN_SECRET` | Random string for seeding demo data | Optional |
+| `NEXT_PUBLIC_APP_URL` | `https://your-app.vercel.app` | Optional |
+
+Apply to **Production**, **Preview**, and **Development**.
+
+### Step 4 — Deploy
+
+Click **Deploy**. The build runs:
+
+```
+prisma generate → prisma migrate deploy → next build
+```
+
+This creates all database tables automatically.
+
+### Step 5 — Seed demo data
+
+After first successful deploy, run once:
+
+```bash
+curl -X POST https://YOUR-APP.vercel.app/api/admin/seed \
+  -H "Authorization: Bearer YOUR_ADMIN_SECRET"
+```
+
+Or locally (with Neon URLs in `.env`):
+
+```bash
+npm run db:seed
+```
+
+**Demo login:** `demo@moodcast.app` / `demo1234`
+
+### Step 6 — Verify deployment
+
+```bash
+curl https://YOUR-APP.vercel.app/api/health
+```
+
+Expected:
+```json
+{ "ok": true, "db": "connected", "env": { "hasDatabaseUrl": true, ... } }
+```
+
+---
+
+## Local development
+
+### Option A — Docker Postgres
+
+```bash
+docker compose up -d
+npm install
+npm run db:migrate   # first time only
+npm run db:seed
+npm run dev
+```
+
+### Option B — Use Neon for local too
+
+Paste the same Neon `DATABASE_URL` and `DIRECT_URL` into `.env`.
 
 ```bash
 npm install
-npm run db:push
+npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
 
-**Demo login:** `demo@moodcast.app` / `demo1234`
+---
 
-### Optional: PostgreSQL via Docker
+## Environment variables
 
-```bash
-docker compose up -d
-# Set DATABASE_URL in .env to postgresql://moodcast:moodcast@localhost:5433/moodcast
-# Change provider in prisma/schema.prisma to postgresql
-npm run db:push
+Copy `.env.example` to `.env`:
+
+```env
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+JWT_SECRET="your-local-secret"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+ADMIN_SECRET="optional-for-seed-api"
 ```
 
-## Showcase flow (5 min demo)
+---
 
-1. **Landing** → explain vision
-2. **Register** or login as demo user
-3. **Check-in** → type "I'm stressed about work today"
-4. **Room** → auto-matched to Stressed room (up to 12 users)
-5. **Post** → share an emotional thought
-6. **React** → second user earns author MoodCoins (❤️1 👍5 🔖3 📤5)
-7. **Wallet** → view balance & demo redemption
-
-## MVP scope (IN)
+## Features
 
 | Feature | Status |
 |---------|--------|
-| Email/password auth | ✅ |
-| Anonymous alias in rooms | ✅ |
+| Auth (email/password) | ✅ |
 | Daily mood check-in | ✅ |
-| Keyword mood matching (no OpenAI) | ✅ |
-| Auto room assignment (max 12) | ✅ |
-| 24h room expiry | ✅ |
-| **Change mood & switch rooms** | ✅ |
-| Posts in rooms | ✅ |
-| **MoodCast Feed** (persistent public feed) | ✅ |
-| Publish to feed from room | ✅ |
+| AI mood matching (keyword engine) | ✅ |
+| 24h mood rooms (max 12) | ✅ |
+| Change mood & switch rooms | ✅ |
+| MoodCast Feed (persistent) | ✅ |
+| MoodCoins wallet | ✅ |
 | Reactions only (no comments) | ✅ |
-| MoodCoins wallet & ledger | ✅ |
-| Demo redemption | ✅ |
 
-## MVP scope (OUT — later)
+**Demo login:** `demo@moodcast.app` / `demo1234`
 
-- OpenAI / crisis detection
-- Vent canvas (voice/sketch)
-- Creator economy & cash payouts
-- Premium payments (Razorpay)
-- Mobile apps
-- B2B dashboards
-- K8s / cloud deploy
-- Push notifications
+---
 
-## Conflict resolutions (demo)
+## Troubleshooting Vercel
 
-| # | Decision |
-|---|----------|
-| C1 | Ephemeral only — rooms & posts deleted after 24h |
-| C2 | Rolling 24h from room creation |
-| C3 | Like=1, Helpful=5, Save=3, Share=5 |
-| C4 | Post authors earn coins |
-| C5 | Email auth + anonymous alias in rooms |
-| C6 | Four reactions only |
-| C7 | No comments, DMs, or replies |
-| C8 | Vent canvas deferred |
-| C9 | Auto-match after check-in |
-| C11 | Minimal web MVP only |
+| Problem | Solution |
+|---------|----------|
+| `Can't reach database` | Check `DATABASE_URL` uses **pooled** Neon URL with `?sslmode=require` |
+| Build fails on `migrate deploy` | Ensure `DIRECT_URL` is set (direct Neon URL, not pooler) |
+| Login works locally but not on Vercel | Set `JWT_SECRET` on Vercel |
+| Empty feed / no users | Run `/api/admin/seed` or `npm run db:seed` |
+| 500 on all API routes | Visit `/api/health` to see DB connection status |
+| `Prisma Client could not locate Query Engine` | Fixed via `binaryTargets = ["native", "rhel-openssl-3.0.x"]` in schema |
 
-## Assumptions A–H (demo)
-
-- **A** No K8s — Docker Compose locally
-- **B** Wallet demo only — no real UPI payouts
-- **C** No post archive after expiry
-- **D** Email required; anonymous in rooms
-- **E** Web app only (Next.js)
-- **F** Keyword mood engine (no OpenAI)
-- **G** Rolling 24h expiry
-- **H** Share = in-app counter only
+---
 
 ## Tech stack
 
-| Layer | Choice | Why |
-|-------|--------|-----|
-| Frontend | Next.js 15 + React 19 | Full-stack, fast to ship |
-| Styling | Tailwind CSS 4 | Matches pitch deck aesthetic |
-| Backend | Next.js API routes | Single repo, local dev |
-| Database | SQLite (demo) / PostgreSQL (prod) | Zero-config local demo |
-| Auth | JWT cookies + bcrypt | Simple, no external deps |
-| Mood AI | Keyword classifier | No API keys for demo |
-| Infra | Local dev / Docker Compose (optional) | SQLite for instant demo |
+| Layer | Choice |
+|-------|--------|
+| Frontend | Next.js 15 + React 19 + Tailwind |
+| Backend | Next.js API routes (serverless) |
+| Database | PostgreSQL via Prisma |
+| Hosting | Vercel |
+| Auth | JWT httpOnly cookies |
+
+---
 
 ## Coin economy
 
-| Action | Coins |
-|--------|-------|
-| Like received | 1 |
-| Helpful received | 5 |
-| Save received | 3 |
-| Share received | 5 |
+| Reaction | Coins |
+|----------|-------|
+| ❤️ Like | 1 |
+| 👍 Helpful | 5 |
+| 🔖 Save | 3 |
+| 📤 Share | 5 |
 
-Exchange: 10 coins = ₹1 (display only). Redemption is demo.
-
-## 4-month roadmap
-
-- **Month 1:** Mobile app, OpenAI mood + crisis, Razorpay premium
-- **Month 2:** Creator economy, moderation dashboard
-- **Month 3:** AWS deploy, push notifications, analytics
-- **Month 4:** Public beta, campus launch, compliance (DPDP)
+---
 
 ## Project structure
 
 ```
-src/
-├── app/           # Pages + API routes
-├── components/    # UI components
-└── lib/           # Auth, coins, mood engine, rooms, prisma
-prisma/
-├── schema.prisma  # Database schema
-└── seed.ts        # Demo users
+src/app/          → pages + API routes
+src/components/   → UI components
+src/lib/          → auth, coins, rooms, prisma, seed
+prisma/           → schema + migrations
 ```

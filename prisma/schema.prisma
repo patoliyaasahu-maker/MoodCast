@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum ReactionType {
@@ -25,16 +27,16 @@ enum CoinReason {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  email          String          @unique
+  id             String            @id @default(cuid())
+  email          String            @unique
   passwordHash   String
   displayName    String
   anonymousAlias String?
   city           String?
-  moodCoins      Int             @default(0)
-  isPremium      Boolean         @default(false)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  moodCoins      Int               @default(0)
+  isPremium      Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
   checkIns       MoodCheckIn[]
   roomMembers    RoomMember[]
   posts          Post[]
@@ -45,27 +47,27 @@ model User {
 }
 
 model MoodCheckIn {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  text       String
-  moodLabel  String
-  moodScore  Float
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text      String
+  moodLabel String
+  moodScore Float
+  createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
   @@index([moodLabel, createdAt])
 }
 
 model Room {
-  id          String       @id @default(cuid())
-  name        String
-  moodLabel   String
-  maxMembers  Int          @default(12)
-  expiresAt   DateTime
-  createdAt   DateTime     @default(now())
-  members     RoomMember[]
-  posts       Post[]
+  id         String       @id @default(cuid())
+  name       String
+  moodLabel  String
+  maxMembers Int          @default(12)
+  expiresAt  DateTime
+  createdAt  DateTime     @default(now())
+  members    RoomMember[]
+  posts      Post[]
 
   @@index([moodLabel, expiresAt])
   @@index([expiresAt])

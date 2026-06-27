@@ -4,9 +4,14 @@ import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
 const COOKIE_NAME = "moodcast_session";
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? "fallback-dev-secret"
-);
+
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET environment variable is required in production");
+  }
+  return new TextEncoder().encode(secret ?? "fallback-dev-secret");
+}
 
 export type SessionUser = {
   id: string;
@@ -31,7 +36,7 @@ export async function createSession(user: SessionUser) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(secret);
+    .sign(getJwtSecret());
 
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
@@ -54,7 +59,7 @@ export async function getSession(): Promise<SessionUser | null> {
   if (!token) return null;
 
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     if (!payload.sub) return null;
     return {
       id: payload.sub,
