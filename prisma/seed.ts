@@ -19,8 +19,10 @@ async function connectWithRetry(maxAttempts = 5) {
 async function main() {
   await connectWithRetry();
   const result = await seedDatabase();
-  console.log(`Seeded ${result.users} demo users (password: demo1234)`);
-  console.log(`Created ${result.feedPostsCreated} feed posts`);
+  console.log(`Seeded ${result.demoUsers} demo users (password: demo1234)`);
+  console.log(`Feed: ${result.feedPostsCreated} new posts (${result.feedPostsTotal} total in catalog)`);
+  console.log(`Rooms: ${result.roomsCreated} new rooms (${result.roomsTotal} total in catalog)`);
+  console.log(`Room posts: ${result.roomPostsCreated} new · Members added: ${result.membersAdded}`);
   console.log("Login as: demo@moodcast.app / demo1234");
 }
 
