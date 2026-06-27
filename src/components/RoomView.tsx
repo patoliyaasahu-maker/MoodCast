@@ -5,6 +5,7 @@ import { Globe, RefreshCw } from "lucide-react";
 import { PostCard } from "./PostCard";
 import { Card } from "./Card";
 import { ChangeMoodSection } from "./ChangeMoodSection";
+import { UserAlias } from "./UserAlias";
 import { formatTimeRemaining } from "@/lib/utils";
 
 type RoomData = {
@@ -14,7 +15,7 @@ type RoomData = {
   expiresAt: string;
   memberCount: number;
   maxMembers: number;
-  members: { id: string; alias: string; isYou: boolean }[];
+  members: { id: string; alias: string; isYou: boolean; isDemo?: boolean }[];
   posts: Parameters<typeof PostCard>[0]["post"][];
 };
 
@@ -88,13 +89,13 @@ export function RoomView({ initialRoom }: { initialRoom: RoomData }) {
           {room.members.map((m) => (
             <span
               key={m.id}
-              className={`rounded-full px-3 py-1 text-xs ${
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs ${
                 m.isYou
                   ? "bg-violet-500/30 text-violet-200"
                   : "bg-white/5 text-slate-400"
               }`}
             >
-              {m.alias}{m.isYou ? " (you)" : ""}
+              <UserAlias alias={m.alias} isDemo={m.isDemo} isYou={m.isYou} />
             </span>
           ))}
         </div>

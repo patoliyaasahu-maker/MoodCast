@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Card } from "@/components/Card";
+import { DemoUserChip } from "@/components/DemoUserChip";
+import { DEMO_LOGIN_ACCOUNTS } from "@/lib/demo-content";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -77,6 +79,32 @@ export default function LoginPage() {
               Register
             </Link>
           </p>
+        </Card>
+
+        <Card title="Try demo accounts" className="mt-6">
+          <p className="mb-3 text-sm text-slate-400">
+            All demo users use password <span className="font-mono text-slate-300">demo1234</span>.
+            Posts show a small <DemoUserChip /> badge.
+          </p>
+          <div className="space-y-2">
+            {DEMO_LOGIN_ACCOUNTS.map((account) => (
+              <button
+                key={account.email}
+                type="button"
+                onClick={() => {
+                  setEmail(account.email);
+                  setPassword("demo1234");
+                }}
+                className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-left text-sm hover:border-amber-500/30 hover:bg-amber-500/5"
+              >
+                <span className="text-slate-200">
+                  {account.alias}
+                  <span className="ml-2 text-xs text-slate-500">{account.email}</span>
+                </span>
+                <DemoUserChip />
+              </button>
+            ))}
+          </div>
         </Card>
       </main>
     </div>

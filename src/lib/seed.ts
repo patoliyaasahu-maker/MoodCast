@@ -1,84 +1,38 @@
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
+import { isDemoUser } from "./demo";
+import { DEMO_FEED_POSTS, DEMO_ROOMS, DEMO_USERS } from "./demo-content";
 
-const FEED_POSTS = [
-  {
-    email: "rahul@demo.com",
-    moodLabel: "Stressed",
-    content:
-      "Today my manager criticized me in front of everyone. I smiled and nodded but inside I wanted to disappear. Anyone else feel like they're performing okay-ness at work?",
-    likes: 12,
-    helpful: 8,
-    saves: 3,
-    shares: 2,
-  },
-  {
-    email: "priya@demo.com",
-    moodLabel: "Anxious",
-    content:
-      "3 AM again. My brain is running scenarios that will never happen. I know logically I'm fine. My body doesn't believe me.",
-    likes: 24,
-    helpful: 15,
-    saves: 6,
-    shares: 4,
-  },
-  {
-    email: "amit@demo.com",
-    moodLabel: "Sad",
-    content:
-      "Moved to a new city for work. I have colleagues but no one who'd notice if I didn't show up to lunch. Loneliness in a crowd is a strange feeling.",
-    likes: 18,
-    helpful: 11,
-    saves: 5,
-    shares: 1,
-  },
-  {
-    email: "sneha@demo.com",
-    moodLabel: "Hopeful",
-    content:
-      "Small win today: I told my friend I wasn't okay instead of saying 'I'm fine.' She just listened. No advice. That was enough.",
-    likes: 31,
-    helpful: 22,
-    saves: 9,
-    shares: 7,
-  },
-  {
-    email: "priya@demo.com",
-    moodLabel: "Tired",
-    content:
-      "Burnout isn't always dramatic. Sometimes it's answering 'how are you' with 'tired' for six months straight and meaning it every time.",
-    likes: 27,
-    helpful: 19,
-    saves: 8,
-    shares: 3,
-  },
-];
+function hoursAgoDate(hours = 0) {
+  return new Date(Date.now() - hours * 60 * 60 * 1000);
+}
 
 export async function seedDatabase() {
   const passwordHash = await bcrypt.hash("demo1234", 12);
 
-  const userData = [
-    { email: "rahul@demo.com", displayName: "Rahul", anonymousAlias: "QuietWave", city: "Pune" },
-    { email: "priya@demo.com", displayName: "Priya", anonymousAlias: "MoonLeaf", city: "Mumbai" },
-    { email: "amit@demo.com", displayName: "Amit", anonymousAlias: "SoftEcho", city: "Bangalore" },
-    { email: "sneha@demo.com", displayName: "Sneha", anonymousAlias: "CalmRiver", city: "Delhi" },
-    { email: "demo@moodcast.app", displayName: "Demo User", anonymousAlias: "StarGazer", city: "Pune" },
-  ];
-
   const users = await Promise.all(
-    userData.map((u) =>
+    DEMO_USERS.map((u) =>
       prisma.user.upsert({
         where: { email: u.email },
-        update: {},
-        create: { ...u, passwordHash, moodCoins: 50 },
+        update: {
+          displayName: u.displayName,
+          anonymousAlias: u.anonymousAlias,
+          city: u.city,
+          moodCoins: u.moodCoins,
+        },
+        create: { ...u, passwordHash },
       })
     )
   );
 
   const userByEmail = Object.fromEntries(users.map((u) => [u.email, u]));
   let feedPostsCreated = 0;
+  let roomsCreated = 0;
+  let roomPostsCreated = 0;
+  let checkInsCreated = 0;
+  let membersAdded = 0;
 
-  for (const post of FEED_POSTS) {
+  for (const post of DEMO_FEED_POSTS) {
     const author = userByEmail[post.email];
     const existing = await prisma.feedPost.findFirst({
       where: { authorId: author.id, content: post.content },
@@ -93,15 +47,94 @@ export async function seedDatabase() {
           helpfulCount: post.helpful,
           saveCount: post.saves,
           shareCount: post.shares,
+          createdAt: hoursAgoDate(post.hoursAgo ?? 0),
         },
       });
       feedPostsCreated++;
     }
   }
 
+  const expiresAt = new Date(Date.now() + 23 * 60 * 60 * 1000);
+
+  for (const roomData of DEMO_ROOMS) {
+    let room = await prisma.room.findFirst({
+      where: { name: roomData.name, expiresAt: { gt: new Date() } },
+    });
+
+    if (!room) {
+      room = await prisma.room.create({
+        data: {
+          name: roomData.name,
+          moodLabel: roomData.moodLabel,
+          expiresAt,
+        },
+      });
+      roomsCreated++;
+    }
+
+    for (const email of roomData.memberEmails) {
+      const user = userByEmail[email];
+      const existingMember = await prisma.roomMember.findUnique({
+        where: { roomId_userId: { roomId: room.id, userId: user.id } },
+      });
+      if (!existingMember) {
+        await prisma.roomMember.create({
+          data: { roomId: room.id, userId: user.id },
+        });
+        membersAdded++;
+      }
+
+      const checkInExists = await prisma.moodCheckIn.findFirst({
+        where: { userId: user.id, moodLabel: roomData.moodLabel },
+        orderBy: { createdAt: "desc" },
+      });
+      if (!checkInExists) {
+        await prisma.moodCheckIn.create({
+          data: {
+            userId: user.id,
+            text: `Feeling ${roomData.moodLabel.toLowerCase()} today.`,
+            moodLabel: roomData.moodLabel,
+            moodScore: 0.72,
+            createdAt: hoursAgoDate(12),
+          },
+        });
+        checkInsCreated++;
+      }
+    }
+
+    for (const post of roomData.posts) {
+      const author = userByEmail[post.email];
+      const existing = await prisma.post.findFirst({
+        where: { roomId: room.id, authorId: author.id, content: post.content },
+      });
+      if (!existing) {
+        await prisma.post.create({
+          data: {
+            roomId: room.id,
+            authorId: author.id,
+            content: post.content,
+            likeCount: post.likes ?? 0,
+            helpfulCount: post.helpful ?? 0,
+            saveCount: post.saves ?? 0,
+            shareCount: post.shares ?? 0,
+            createdAt: hoursAgoDate(post.hoursAgo ?? 0),
+          },
+        });
+        roomPostsCreated++;
+      }
+    }
+  }
+
   return {
     users: users.length,
+    demoUsers: users.filter((u) => isDemoUser(u.email)).length,
     feedPostsCreated,
+    feedPostsTotal: DEMO_FEED_POSTS.length,
+    roomsCreated,
+    roomsTotal: DEMO_ROOMS.length,
+    roomPostsCreated,
+    membersAdded,
+    checkInsCreated,
     demoLogin: { email: "demo@moodcast.app", password: "demo1234" },
   };
 }

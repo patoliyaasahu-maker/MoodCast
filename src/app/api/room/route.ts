@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser, getAnonymousName } from "@/lib/auth";
 import { expireStaleRooms } from "@/lib/rooms";
 import { prisma } from "@/lib/prisma";
+import { isDemoUser } from "@/lib/demo";
 
 export async function GET(request: Request) {
   const user = await requireUser();
@@ -30,12 +31,12 @@ export async function GET(request: Request) {
     where: { id: roomId },
     include: {
       members: {
-        include: { user: { select: { id: true, displayName: true, anonymousAlias: true } } },
+        include: { user: { select: { id: true, email: true, displayName: true, anonymousAlias: true } } },
       },
       posts: {
         orderBy: { createdAt: "desc" },
         include: {
-          author: { select: { id: true, displayName: true, anonymousAlias: true } },
+          author: { select: { id: true, email: true, displayName: true, anonymousAlias: true } },
           reactions: { where: { userId: user.id } },
           feedPost: { select: { id: true } },
         },
@@ -60,12 +61,14 @@ export async function GET(request: Request) {
         id: m.user.id,
         alias: getAnonymousName(m.user),
         isYou: m.user.id === user.id,
+        isDemo: isDemoUser(m.user.email),
       })),
       posts: room.posts.map((p) => ({
         id: p.id,
         content: p.content,
         authorAlias: getAnonymousName(p.author),
         isOwn: p.author.id === user.id,
+        isDemo: isDemoUser(p.author.email),
         likeCount: p.likeCount,
         helpfulCount: p.helpfulCount,
         saveCount: p.saveCount,

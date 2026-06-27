@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { RoomView } from "@/components/RoomView";
 import { requireUser, getAnonymousName } from "@/lib/auth";
 import { expireStaleRooms } from "@/lib/rooms";
+import { isDemoUser } from "@/lib/demo";
 import { prisma } from "@/lib/prisma";
 
 type Props = { params: Promise<{ id: string }> };
@@ -24,12 +25,12 @@ export default async function RoomPage({ params }: Props) {
     where: { id },
     include: {
       members: {
-        include: { user: { select: { id: true, displayName: true, anonymousAlias: true } } },
+        include: { user: { select: { id: true, email: true, displayName: true, anonymousAlias: true } } },
       },
       posts: {
         orderBy: { createdAt: "desc" },
         include: {
-          author: { select: { id: true, displayName: true, anonymousAlias: true } },
+          author: { select: { id: true, email: true, displayName: true, anonymousAlias: true } },
           reactions: { where: { userId: user.id } },
           feedPost: { select: { id: true } },
         },
@@ -64,12 +65,14 @@ export default async function RoomPage({ params }: Props) {
       id: m.user.id,
       alias: getAnonymousName(m.user),
       isYou: m.user.id === user.id,
+      isDemo: isDemoUser(m.user.email),
     })),
     posts: room.posts.map((p) => ({
       id: p.id,
       content: p.content,
       authorAlias: getAnonymousName(p.author),
       isOwn: p.author.id === user.id,
+      isDemo: isDemoUser(p.author.email),
       likeCount: p.likeCount,
       helpfulCount: p.helpfulCount,
       saveCount: p.saveCount,

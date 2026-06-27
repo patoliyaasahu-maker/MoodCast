@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { Globe, Check } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
+import { UserAlias } from "./UserAlias";
 
 type Post = {
   id: string;
   content: string;
   authorAlias: string;
   isOwn: boolean;
+  isDemo?: boolean;
   likeCount: number;
   helpfulCount: number;
   saveCount: number;
@@ -91,7 +93,7 @@ export function PostCard({ post: initialPost, variant = "room", onPublished }: P
     <article className="rounded-xl border border-white/10 bg-black/20 p-4">
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-violet-300">{post.authorAlias}</span>
+          <UserAlias alias={post.authorAlias} isDemo={post.isDemo} />
           {post.moodLabel && (
             <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-300">
               {post.moodLabel}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser, getAnonymousName } from "@/lib/auth";
+import { isDemoUser } from "@/lib/demo";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
     orderBy: { createdAt: "desc" },
     take: 50,
     include: {
-      author: { select: { id: true, displayName: true, anonymousAlias: true } },
+      author: { select: { id: true, email: true, displayName: true, anonymousAlias: true } },
       reactions: { where: { userId: user.id } },
     },
   });
@@ -34,6 +35,7 @@ export async function GET(request: Request) {
       moodLabel: p.moodLabel,
       authorAlias: getAnonymousName(p.author),
       isOwn: p.author.id === user.id,
+      isDemo: isDemoUser(p.author.email),
       likeCount: p.likeCount,
       helpfulCount: p.helpfulCount,
       saveCount: p.saveCount,
