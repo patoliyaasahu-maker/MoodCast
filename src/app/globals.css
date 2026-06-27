@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b0618;
+  --foreground: #f8fafc;
+  --card: rgba(255, 255, 255, 0.05);
+  --border: rgba(255, 255, 255, 0.1);
+  --muted: #94a3b8;
+  --accent: #8b5cf6;
+  --accent-pink: #ec4899;
+}
+
+body {
+  background: linear-gradient(135deg, #1a0533 0%, #2d0a5e 50%, #0a1a3e 100%);
+  background-attachment: fixed;
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+input, textarea, button {
+  font: inherit;
+}

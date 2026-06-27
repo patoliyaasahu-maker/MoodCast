@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: moodcast-db
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: moodcast
+      POSTGRES_PASSWORD: moodcast
+      POSTGRES_DB: moodcast
+    volumes:
+      - moodcast_pg:/var/lib/postgresql/data
+
+volumes:
+  moodcast_pg:

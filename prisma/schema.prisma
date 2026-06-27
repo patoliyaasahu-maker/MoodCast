@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ReactionType {
+  LIKE
+  HELPFUL
+  SAVE
+  SHARE
+}
+
+enum CoinReason {
+  LIKE_RECEIVED
+  HELPFUL_RECEIVED
+  SAVE_RECEIVED
+  SHARE_RECEIVED
+  REDEEM_PREMIUM
+  REDEEM_GIFT
+  ADMIN_ADJUST
+}
+
+model User {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  passwordHash   String
+  displayName    String
+  anonymousAlias String?
+  city           String?
+  moodCoins      Int             @default(0)
+  isPremium      Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  checkIns       MoodCheckIn[]
+  roomMembers    RoomMember[]
+  posts          Post[]
+  reactions      Reaction[]
+  feedPosts      FeedPost[]
+  feedReactions  FeedReaction[]
+  coinLedger     CoinTransaction[]
+}
+
+model MoodCheckIn {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text       String
+  moodLabel  String
+  moodScore  Float
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([moodLabel, createdAt])
+}
+
+model Room {
+  id          String       @id @default(cuid())
+  name        String
+  moodLabel   String
+  maxMembers  Int          @default(12)
+  expiresAt   DateTime
+  createdAt   DateTime     @default(now())
+  members     RoomMember[]
+  posts       Post[]
+
+  @@index([moodLabel, expiresAt])
+  @@index([expiresAt])
+}
+
+model RoomMember {
+  id       String   @id @default(cuid())
+  roomId   String
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt DateTime @default(now())
+
+  @@unique([roomId, userId])
+  @@index([userId])
+}
+
+model Post {
+  id           String     @id @default(cuid())
+  roomId       String
+  room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content      String
+  likeCount    Int        @default(0)
+  helpfulCount Int        @default(0)
+  saveCount    Int        @default(0)
+  shareCount   Int        @default(0)
+  createdAt    DateTime   @default(now())
+  reactions    Reaction[]
+  feedPost     FeedPost?
+
+  @@index([roomId, createdAt])
+}
+
+model FeedPost {
+  id           String         @id @default(cuid())
+  authorId     String
+  author       User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content      String
+  moodLabel    String
+  sourcePostId String?        @unique
+  sourcePost   Post?          @relation(fields: [sourcePostId], references: [id], onDelete: SetNull)
+  likeCount    Int            @default(0)
+  helpfulCount Int            @default(0)
+  saveCount    Int            @default(0)
+  shareCount   Int            @default(0)
+  createdAt    DateTime       @default(now())
+  reactions    FeedReaction[]
+
+  @@index([createdAt])
+  @@index([moodLabel])
+}
+
+model FeedReaction {
+  id         String       @id @default(cuid())
+  feedPostId String
+  feedPost   FeedPost     @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       ReactionType
+  createdAt  DateTime     @default(now())
+
+  @@unique([feedPostId, userId, type])
+  @@index([userId])
+}
+
+model Reaction {
+  id        String       @id @default(cuid())
+  postId    String
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ReactionType
+  createdAt DateTime     @default(now())
+
+  @@unique([postId, userId, type])
+  @@index([userId])
+}
+
+model CoinTransaction {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    CoinReason
+  metadata  String?
+  createdAt DateTime   @default(now())
+
+  @@index([userId, createdAt])
+}
