@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { prisma, isDatabaseConnectionError } from "@/lib/prisma";
 import { createSession, hashPassword } from "@/lib/auth";
 
 const schema = z.object({
@@ -48,6 +48,15 @@ export async function POST(request: Request) {
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: err.errors[0].message }, { status: 400 });
+    }
+    if (isDatabaseConnectionError(err)) {
+      return NextResponse.json(
+        {
+          error:
+            "Database is unavailable. Run: npm run db:setup — then restart npm run dev. Check /api/health",
+        },
+        { status: 503 }
+      );
     }
     console.error(err);
     return NextResponse.json({ error: "Registration failed" }, { status: 500 });

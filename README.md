@@ -40,8 +40,8 @@ In **Project → Settings → Environment Variables**, add:
 
 | Variable | Value | Required |
 |----------|-------|----------|
-| `DATABASE_URL` | Neon **pooled** connection string (`...-pooler...?sslmode=require`) | ✅ |
-| `DIRECT_URL` | Neon **direct** connection string (no `-pooler`) | ✅ |
+| `DATABASE_URL` | Neon **pooled** URL + `?sslmode=require&pgbouncer=true&connection_limit=1` | ✅ |
+| `DIRECT_URL` | Neon **direct** URL + `?sslmode=require` | ✅ |
 | `JWT_SECRET` | Long random string (e.g. `openssl rand -base64 32`) | ✅ |
 | `ADMIN_SECRET` | Random string for seeding demo data | Optional |
 
@@ -151,7 +151,8 @@ ADMIN_SECRET="optional-for-seed-api"
 
 | Problem | Solution |
 |---------|----------|
-| `Can't reach database server at localhost:5433` | You copied local `.env` to Vercel. Replace with **Neon URLs** (see Step 3) |
+| `Timed out fetching a new connection from the connection pool` | Restart dev server (`Ctrl+C` then `npm run dev`). Use direct URL locally with `connection_limit=5` in `.env` |
+| `Can't reach database server` (pooler) | Use **direct** URL locally. Pooler is for Vercel only |
 | `Missing DATABASE_URL or DIRECT_URL` | Add both Neon connection strings in Vercel env vars |
 | Build fails on `migrate deploy` | Ensure `DIRECT_URL` is set (direct Neon URL, not pooler) |
 | Login works locally but not on Vercel | Set `JWT_SECRET` on Vercel |
