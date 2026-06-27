@@ -38,6 +38,7 @@ export function isDatabaseConnectionError(err: unknown) {
     msg.includes("connection pool") ||
     msg.includes("can't reach database") ||
     msg.includes("p1001") ||
-    msg.includes("connect timeout")
+    msg.includes("connect timeout") ||
+    msg.includes("bufferutil")
   );
 }

@@ -40,14 +40,13 @@ In **Project → Settings → Environment Variables**, add:
 
 | Variable | Value | Required |
 |----------|-------|----------|
-| `DATABASE_URL` | Neon **pooled** URL + `?sslmode=require&pgbouncer=true&connection_limit=1` | ✅ |
-| `DIRECT_URL` | Neon **direct** URL + `?sslmode=require` | ✅ |
-| `JWT_SECRET` | Long random string (e.g. `openssl rand -base64 32`) | ✅ |
+| `DATABASE_URL` | Neon connection string (`?sslmode=require`) — pooled or direct both work | ✅ |
+| `JWT_SECRET` | Long random string | ✅ |
 | `ADMIN_SECRET` | Random string for seeding demo data | Optional |
 
-Apply to **Production**, **Preview**, and **Development**.
+> `DIRECT_URL` is **not required** — schema is applied via WebSocket during build.
 
-> **Important:** Do **NOT** use `localhost:5433` on Vercel. That is only for local Docker Postgres. Vercel builds run in the cloud and cannot reach your laptop.
+Apply to **Production**, **Preview**, and **Development**.
 
 ### Step 4 — Deploy
 
