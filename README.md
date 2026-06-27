@@ -40,13 +40,14 @@ In **Project → Settings → Environment Variables**, add:
 
 | Variable | Value | Required |
 |----------|-------|----------|
-| `DATABASE_URL` | Neon **pooled** connection string | ✅ |
-| `DIRECT_URL` | Neon **direct** connection string | ✅ |
+| `DATABASE_URL` | Neon **pooled** connection string (`...-pooler...?sslmode=require`) | ✅ |
+| `DIRECT_URL` | Neon **direct** connection string (no `-pooler`) | ✅ |
 | `JWT_SECRET` | Long random string (e.g. `openssl rand -base64 32`) | ✅ |
 | `ADMIN_SECRET` | Random string for seeding demo data | Optional |
-| `NEXT_PUBLIC_APP_URL` | `https://your-app.vercel.app` | Optional |
 
 Apply to **Production**, **Preview**, and **Development**.
+
+> **Important:** Do **NOT** use `localhost:5433` on Vercel. That is only for local Docker Postgres. Vercel builds run in the cloud and cannot reach your laptop.
 
 ### Step 4 — Deploy
 
@@ -150,7 +151,8 @@ ADMIN_SECRET="optional-for-seed-api"
 
 | Problem | Solution |
 |---------|----------|
-| `Can't reach database` | Check `DATABASE_URL` uses **pooled** Neon URL with `?sslmode=require` |
+| `Can't reach database server at localhost:5433` | You copied local `.env` to Vercel. Replace with **Neon URLs** (see Step 3) |
+| `Missing DATABASE_URL or DIRECT_URL` | Add both Neon connection strings in Vercel env vars |
 | Build fails on `migrate deploy` | Ensure `DIRECT_URL` is set (direct Neon URL, not pooler) |
 | Login works locally but not on Vercel | Set `JWT_SECRET` on Vercel |
 | Empty feed / no users | Run `/api/admin/seed` or `npm run db:seed` |
